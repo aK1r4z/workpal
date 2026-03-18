@@ -73,7 +73,7 @@ func VerifyPassword(password string, auth string) (bool, error) {
 	comparisonHash := argon2.IDKey([]byte(password), salt, config.Iterations, config.Memory, config.Parallelism, config.KeyLength)
 
 	// Gemini Suggested: 使用 constant-time 比较防止计时攻击
-	if subtle.ConstantTimeCompare(hash, comparisonHash) != 1 {
+	if subtle.ConstantTimeCompare(hash, comparisonHash) == 0 {
 		return false, ErrNotMatch
 	}
 
