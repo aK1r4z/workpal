@@ -8,11 +8,13 @@ import (
 	"github.com/aK1r4z/workpal/internal/user"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 var (
-	ErrNotFound = fmt.Errorf("not found")
+	ErrNotFound      = fmt.Errorf("not found")
+	ErrAlreadyExists = fmt.Errorf("user already exists")
 )
 
 type userStore struct {
@@ -62,6 +64,11 @@ func (s *userStore) Create(ctx context.Context, name string, auth string) (*user
 		&u.ID,
 	)
 	if err != nil {
+		if pgErr, ok := errors.AsType[*pgconn.PgError](err); ok {
+			if pgErr.Code == "23505" {
+				return nil, ErrAlreadyExists
+			}
+		}
 		return nil, err
 	}
 
