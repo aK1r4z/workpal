@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/aK1r4z/workpal/internal/auth"
 	"github.com/aK1r4z/workpal/internal/store/postgres"
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v5"
@@ -25,10 +26,10 @@ func main() {
 		panic(err)
 	}
 
+	// 创建 Postgres 数据库连接
 	connString := os.Getenv("CONNECTION_STRING")
 
-	// 创建 Postgres 数据库连接
-	_, err = postgres.New(ctx, connString)
+	db, err := postgres.New(ctx, connString)
 	if err != nil {
 		panic(err)
 	}
@@ -39,10 +40,13 @@ func main() {
 		middleware.RequestLogger(),
 	)
 
-	e.GET("/", func(c *echo.Context) error {
-		time.Sleep(2 * time.Second)
-		return c.String(http.StatusOK, "Hello World!")
-	})
+	// 创建用户认证服务
+	auth.Config.Load()
+
+	authService := auth.NewService(db.UserStore())
+	authHandler := auth.NewHandler(authService)
+
+	authHandler.RegisterRoutes(e)
 
 	// 创建 HTTP 服务器
 	s := &http.Server{
@@ -54,11 +58,12 @@ func main() {
 
 	// 在协程中启动服务器
 	go func() {
-		log.Println("server must be on now.")
 		if err := s.ListenAndServe(); err != http.ErrServerClosed {
 			e.Logger.Error("failed to start server", "error", err)
 		}
 	}()
+
+	log.Println("server must be on now.")
 
 	// 优雅终结流程
 	shutdown := make(chan os.Signal, 1)
