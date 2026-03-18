@@ -56,3 +56,5 @@ func (c *config) Load() {
 }
 
 var Config = DefaultConfig()
+
+var Pepper = ""

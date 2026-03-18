@@ -41,6 +41,7 @@ func main() {
 	)
 
 	// 创建用户认证服务
+	auth.Pepper = os.Getenv("AUTH_PEPPER")
 	auth.Config.Load()
 
 	authService := auth.NewService(db.UserStore())

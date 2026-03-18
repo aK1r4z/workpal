@@ -1,7 +1,9 @@
 package auth
 
 import (
+	"crypto/hmac"
 	"crypto/rand"
+	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/base64"
 	"fmt"
@@ -17,6 +19,13 @@ var (
 	ErrNotMatch     = fmt.Errorf("password not match")
 )
 
+// 生成撒上胡椒粉的密码串
+func GeneratePepperedPassword(pepper string, password string) []byte {
+	h := hmac.New(sha256.New, []byte(pepper))
+	h.Write([]byte(password))
+	return h.Sum(nil)
+}
+
 // 生成用于存储的认证串
 func GenerateAuth(config *config, password string) (string, error) {
 	// 生成盐
@@ -25,7 +34,8 @@ func GenerateAuth(config *config, password string) (string, error) {
 		return "", err
 	}
 
-	hash := argon2.IDKey([]byte(password), salt, config.Iterations, config.Memory, config.Parallelism, config.KeyLength)
+	input := GeneratePepperedPassword(Pepper, password)
+	hash := argon2.IDKey(input, salt, config.Iterations, config.Memory, config.Parallelism, config.KeyLength)
 
 	b64Salt := base64.RawStdEncoding.EncodeToString(salt)
 	b64Hash := base64.RawStdEncoding.EncodeToString(hash)
@@ -70,7 +80,8 @@ func VerifyPassword(password string, auth string) (bool, error) {
 	config.KeyLength = uint32(len(hash))
 
 	// 使用相同的参数对输入密码进行哈希
-	comparisonHash := argon2.IDKey([]byte(password), salt, config.Iterations, config.Memory, config.Parallelism, config.KeyLength)
+	input := GeneratePepperedPassword(Pepper, password)
+	comparisonHash := argon2.IDKey(input, salt, config.Iterations, config.Memory, config.Parallelism, config.KeyLength)
 
 	// Gemini Suggested: 使用 constant-time 比较防止计时攻击
 	if subtle.ConstantTimeCompare(hash, comparisonHash) == 0 {
