@@ -59,8 +59,8 @@ func (s *service) Register(ctx context.Context, username string, password string
 		return err
 	}
 
-	u, err := s.users.Create(ctx, username, auth)
-	if err != nil {
+	u := user.New(username, auth)
+	if err := s.users.Create(ctx, u); err != nil {
 		return err
 	}
 

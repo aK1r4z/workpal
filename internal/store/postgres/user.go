@@ -7,14 +7,16 @@ import (
 
 	"github.com/aK1r4z/workpal/internal/user"
 	"github.com/google/uuid"
+	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 var (
-	ErrNotFound      = fmt.Errorf("not found")
-	ErrAlreadyExists = fmt.Errorf("user already exists")
+	ErrInvalidArgument = fmt.Errorf("invalid argument")
+	ErrNotFound        = fmt.Errorf("not found")
+	ErrAlreadyExists   = fmt.Errorf("user already exists")
 )
 
 type userStore struct {
@@ -22,11 +24,16 @@ type userStore struct {
 }
 
 // 传入的用户名和认证串应已通过安全验证
-func (s *userStore) Create(ctx context.Context, name string, auth string) (*user.User, error) {
+func (s *userStore) Create(ctx context.Context, u *user.User) error {
+	// 如果传入空用户，直接返回
+	if u == nil {
+		return fmt.Errorf("why did you pass a nil user? %w", ErrInvalidArgument)
+	}
+
 	// 开启事务，自动回滚
 	tx, err := s.pool.Begin(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("open tx failed: %w", err)
+		return fmt.Errorf("open tx failed: %w", err)
 	}
 	defer func() {
 		tx.Rollback(ctx) // 不知道这里自动回滚是否会出错，如果出错请改为手动回滚
@@ -53,7 +60,6 @@ func (s *userStore) Create(ctx context.Context, name string, auth string) (*user
 	`
 
 	// 创建用户，插入到表中，返回标识符
-	u := user.New(name, auth)
 	err = tx.QueryRow(ctx, query,
 		u.Name, u.Auth,
 		u.Nickname, u.Email,
@@ -65,18 +71,18 @@ func (s *userStore) Create(ctx context.Context, name string, auth string) (*user
 	)
 	if err != nil {
 		if pgErr, ok := errors.AsType[*pgconn.PgError](err); ok {
-			if pgErr.Code == "23505" {
-				return nil, ErrAlreadyExists
+			if pgErr.Code == pgerrcode.UniqueViolation {
+				return ErrAlreadyExists
 			}
 		}
-		return nil, err
+		return err
 	}
 
 	// 提交事务
 	if err := tx.Commit(ctx); err != nil {
-		return nil, fmt.Errorf("commit tx failed: %w", err)
+		return fmt.Errorf("commit tx failed: %w", err)
 	}
-	return u, nil
+	return nil
 }
 
 func (s *userStore) Get(ctx context.Context, id uuid.UUID) (*user.User, error) {
