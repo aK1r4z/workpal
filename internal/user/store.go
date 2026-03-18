@@ -7,5 +7,8 @@ import (
 )
 
 type Store interface {
-	Get(context.Context, uuid.UUID) (*User, error)
+	Create(ctx context.Context, name string, auth string) (*User, error)
+
+	Get(ctx context.Context, id uuid.UUID) (*User, error)
+	GetByName(ctx context.Context, username string) (*User, error)
 }
