@@ -23,19 +23,19 @@ func New(ctx context.Context, connString string) (*db, error) {
 		return nil, err
 	}
 
-	db := &db{
+	d := &db{
 		pool: pool,
 
 		userStore: &userStore{pool},
 	}
 
-	return db, nil
+	return d, nil
 }
 
-func (db *db) Close() {
-	db.pool.Close()
+func (d *db) Close() {
+	d.pool.Close()
 }
 
-func (db *db) UserStore() user.Store {
-	return db.userStore
+func (d *db) UserStore() user.Store {
+	return d.userStore
 }

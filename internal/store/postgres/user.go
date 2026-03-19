@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/aK1r4z/workpal/internal/user"
 	"github.com/google/uuid"
@@ -17,6 +18,7 @@ var (
 	ErrInvalidArgument = fmt.Errorf("invalid argument")
 	ErrNotFound        = fmt.Errorf("not found")
 	ErrAlreadyExists   = fmt.Errorf("user already exists")
+	ErrAlreadyDeleted = fmt.Errorf("user already deleted or doesn't exist")
 )
 
 type userStore struct {
@@ -149,4 +151,32 @@ func (s *userStore) GetByName(ctx context.Context, username string) (*user.User,
 	}
 
 	return u, nil
+}
+
+func (s *userStore) Delete(ctx context.Context, id uuid.UUID) error {
+	// 查询语句
+	const query = `
+		update users
+		set deleted_at = $2
+		where
+			id = $1 and deleted_at = NULL
+		;
+	`
+
+	// 获取删除时间
+	now := time.Now()
+
+	// 更新数据
+	c, err := s.pool.Exec(ctx, query, id, now)
+	if err != nil {
+		return err
+	}
+	if c.RowsAffected() < 1 {
+		return ErrAlreadyDeleted
+	}
+	if c.RowsAffected() > 1 {
+		return fmt.Errorf("how did this even happen?")
+	}
+
+	return nil
 }
