@@ -48,14 +48,14 @@ func GenerateAuth(config *config, password string) (string, error) {
 }
 
 // 校验用户输入的密码与存储的认证串是否匹配
-func VerifyPassword(password string, auth string) (bool, error) {
+func VerifyPassword(password string, auth string) error {
 	// 解析存储的认证串
 	parts := strings.Split(auth, "$")
 	if len(parts) != 6 || parts[1] != "argon2id" {
-		return false, ErrInvalidHash
+		return ErrInvalidHash
 	}
 	if parts[2] != "v="+strconv.FormatUint(argon2.Version, 10) {
-		return false, ErrIncompatible
+		return ErrIncompatible
 	}
 
 	config := DefaultConfig()
@@ -64,18 +64,18 @@ func VerifyPassword(password string, auth string) (bool, error) {
 		&config.Memory, &config.Iterations, &config.Parallelism,
 	)
 	if err != nil {
-		return false, err
+		return fmt.Errorf("scan failed: %w", err)
 	}
 
 	salt, err := base64.RawStdEncoding.DecodeString(parts[4])
 	if err != nil {
-		return false, err
+		return fmt.Errorf("base64 decode string failed: %w", err)
 	}
 	config.SaltLength = uint32(len(salt))
 
 	hash, err := base64.RawStdEncoding.DecodeString(parts[5])
 	if err != nil {
-		return false, err
+		return fmt.Errorf("base64 decode string failed: %w", err)
 	}
 	config.KeyLength = uint32(len(hash))
 
@@ -85,8 +85,8 @@ func VerifyPassword(password string, auth string) (bool, error) {
 
 	// Gemini Suggested: 使用 constant-time 比较防止计时攻击
 	if subtle.ConstantTimeCompare(hash, comparisonHash) == 0 {
-		return false, ErrNotMatch
+		return ErrNotMatch
 	}
 
-	return true, nil
+	return nil
 }

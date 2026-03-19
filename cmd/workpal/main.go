@@ -11,6 +11,7 @@ import (
 
 	"github.com/aK1r4z/workpal/internal/auth"
 	"github.com/aK1r4z/workpal/internal/store/postgres"
+	"github.com/aK1r4z/workpal/internal/store/redis"
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
@@ -34,6 +35,14 @@ func main() {
 		panic(err)
 	}
 
+	// 创建 Redis 连接
+	rdbAddr := os.Getenv("REDIS_ADDRESS")
+
+	rdb, err := redis.New(ctx, rdbAddr)
+	if err != nil {
+		panic(err)
+	}
+
 	// 创建 HTTP 请求处理器
 	e := echo.New()
 	e.Use(
@@ -44,15 +53,15 @@ func main() {
 	auth.Pepper = os.Getenv("AUTH_PEPPER")
 	auth.Config.Load()
 
-	authService := auth.NewService(db.UserStore())
+	authService := auth.NewService(db.UserStore(), rdb.SessionStore())
 	authHandler := auth.NewHandler(authService)
 
 	authHandler.RegisterRoutes(e)
 
 	// 创建 HTTP 服务器
 	s := &http.Server{
-		Handler: e,
 		Addr:    ":8080",
+		Handler: e,
 		// ReadTimeout: 30 * time.Second,
 		// WriteTimeout: 30 * time.Second,
 	}

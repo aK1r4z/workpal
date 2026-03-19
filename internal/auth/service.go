@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"time"
 
+	"github.com/aK1r4z/workpal/internal/session"
 	"github.com/aK1r4z/workpal/internal/user"
 )
 
@@ -36,15 +38,18 @@ func IsValidCredential(username string, password string) error {
 }
 
 type service struct {
-	users user.Store
+	users    user.Store
+	sessions session.Store
 }
 
 // 创建用户认证服务
 func NewService(
 	users user.Store,
+	sessions session.Store,
 ) *service {
 	return &service{
-		users: users,
+		users:    users,
+		sessions: sessions,
 	}
 }
 
@@ -69,20 +74,27 @@ func (s *service) Register(ctx context.Context, username string, password string
 	return nil
 }
 
-func (s *service) Login(ctx context.Context, username string, password string) (bool, error) {
+// 登录，返回 Token
+func (s *service) Login(ctx context.Context, username string, password string) (string, error) {
 	if err := IsValidCredential(username, password); err != nil {
-		return false, err
+		return "", err
 	}
 
 	u, err := s.users.GetByName(ctx, username)
 	if err != nil {
-		return false, err
+		return "", fmt.Errorf("get user by name failed: %w", err)
 	}
 
-	ok, err := VerifyPassword(password, u.Auth)
+	// 验证密码
+	if err := VerifyPassword(password, u.Auth); err != nil {
+		return "", err
+	}
+
+	// 创建会话
+	token, err := s.sessions.Create(ctx, u.ID, 24*time.Hour)
 	if err != nil {
-		return false, err
+		return "", fmt.Errorf("session create failed: %w", err)
 	}
 
-	return ok, nil
+	return token, nil
 }

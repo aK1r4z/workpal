@@ -49,10 +49,14 @@ func (h *handler) login(c *echo.Context) error {
 		return response.Fail(c, http.StatusBadRequest, -1, "invalid request")
 	}
 
-	ok, err := h.authService.Login(c.Request().Context(), req.Username, req.Password)
-	if err != nil || !ok {
+	token, err := h.authService.Login(c.Request().Context(), req.Username, req.Password)
+	if err != nil {
 		return response.Fail(c, http.StatusUnauthorized, -1, "invalid credential")
 	}
 
-	return response.Success(c, http.StatusOK, 0, "login success", true)
+	resp := &loginResponse{
+		Token: token,
+	}
+
+	return response.Success(c, http.StatusOK, 0, "login success", resp)
 }
