@@ -54,8 +54,8 @@ func main() {
 	auth.Config.Load()
 
 	authService := auth.NewService(db.UserStore(), rdb.SessionStore())
-	authHandler := auth.NewHandler(authService)
 
+	authHandler := auth.NewHandler(authService)
 	authHandler.RegisterRoutes(e)
 
 	authMiddleware := auth.Middleware(rdb.SessionStore())
