@@ -58,6 +58,12 @@ func main() {
 
 	authHandler.RegisterRoutes(e)
 
+	authMiddleware := auth.Middleware(rdb.SessionStore())
+
+	// 创建 API 组，使用用户认证中间件
+	api := e.Group("/api")
+	api.Use(authMiddleware)
+
 	// 创建 HTTP 服务器
 	s := &http.Server{
 		Addr:    ":8080",
