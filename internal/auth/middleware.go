@@ -4,13 +4,14 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/aK1r4z/workpal/internal/pkg/response"
 	"github.com/aK1r4z/workpal/internal/session"
+	"github.com/aK1r4z/workpal/pkg/response"
 	"github.com/labstack/echo/v5"
 )
 
+// Context Keys
 const (
-	ContextUserIDKey = "user_id"
+	CtxUserID = "user_id"
 )
 
 func Middleware(sessions session.Store) echo.MiddlewareFunc {
@@ -32,11 +33,11 @@ func Middleware(sessions session.Store) echo.MiddlewareFunc {
 			// 校验 token 并获取用户标识符
 			userID, err := sessions.Get(c.Request().Context(), token)
 			if err != nil {
-				return response.Fail(c, http.StatusUnauthorized, -1, "invalid or expired token")
+				return response.ErrUnauthorized(c)
 			}
 
 			// 把 userID 注入到 echo.Context 里
-			c.Set(ContextUserIDKey, userID)
+			c.Set(CtxUserID, userID)
 
 			return next(c)
 		}

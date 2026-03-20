@@ -3,7 +3,7 @@ package auth
 import (
 	"net/http"
 
-	"github.com/aK1r4z/workpal/internal/pkg/response"
+	"github.com/aK1r4z/workpal/pkg/response"
 	"github.com/labstack/echo/v5"
 )
 
@@ -31,7 +31,7 @@ func (h *handler) RegisterRoutes(e *echo.Echo) {
 func (h *handler) register(c *echo.Context) error {
 	req := &registerRequest{}
 	if err := c.Bind(req); err != nil {
-		return response.Fail(c, http.StatusBadRequest, -1, "invalid request")
+		return response.ErrBadRequest(c)
 	}
 
 	err := h.authService.Register(c.Request().Context(), req.Username, req.Password)
@@ -43,10 +43,11 @@ func (h *handler) register(c *echo.Context) error {
 }
 
 // 登录请求处理器
+// [TODO] RateLimiter
 func (h *handler) login(c *echo.Context) error {
 	req := &loginRequest{}
 	if err := c.Bind(req); err != nil {
-		return response.Fail(c, http.StatusBadRequest, -1, "invalid request")
+		return response.ErrBadRequest(c)
 	}
 
 	token, err := h.authService.Login(c.Request().Context(), req.Username, req.Password)
