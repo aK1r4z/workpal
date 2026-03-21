@@ -72,7 +72,8 @@ func (s *userStore) Create(ctx context.Context, u *user.User) error {
 		&u.ID,
 	)
 	if err != nil {
-		if pgErr, ok := errors.AsType[*pgconn.PgError](err); ok {
+		var pgErr *pgconn.PgError
+		if ok := errors.As(err, &pgErr); ok {
 			if pgErr.Code == pgerrcode.UniqueViolation {
 				return ErrAlreadyExists
 			}
