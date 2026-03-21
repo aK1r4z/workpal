@@ -33,7 +33,7 @@ func (s *sessionStore) Create(ctx context.Context, userID uuid.UUID, ttl time.Du
 		return "", fmt.Errorf("generate token failed: %w", err)
 	}
 
-	key := "session: " + token
+	key := "session:" + token
 	err = s.client.Set(ctx, key, userID.String(), ttl).Err()
 	if err != nil {
 		return "", fmt.Errorf("redis set failed: %w", err)
@@ -43,7 +43,7 @@ func (s *sessionStore) Create(ctx context.Context, userID uuid.UUID, ttl time.Du
 }
 
 func (s *sessionStore) Get(ctx context.Context, token string) (uuid.UUID, error) {
-	key := "session: " + token
+	key := "session:" + token
 	result, err := s.client.Get(ctx, key).Result()
 	if err != nil {
 		return uuid.Nil, fmt.Errorf("redis get failed: %w", err)
@@ -58,7 +58,7 @@ func (s *sessionStore) Get(ctx context.Context, token string) (uuid.UUID, error)
 }
 
 func (s *sessionStore) Delete(ctx context.Context, token string) error {
-	key := "session: " + token
+	key := "session:" + token
 	err := s.client.Del(ctx, key).Err()
 	if err != nil {
 		return fmt.Errorf("redis del failed: %w", err)
