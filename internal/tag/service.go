@@ -54,11 +54,6 @@ func (s *service) Get(ctx context.Context, userID uuid.UUID, name string) (*Tag,
 		return nil, err
 	}
 
-	if t.CreatedBy != userID {
-		// you should check and see how the fuck could this error exists.
-		return nil, fmt.Errorf("internal/tag/service.go > func (s *service) Get: %w", err)
-	}
-
 	return t, nil
 }
 
