@@ -41,7 +41,7 @@ func (s *service) Create(ctx context.Context, userID uuid.UUID, name string) err
 	return nil
 }
 
-func (s *service) Get(ctx context.Context, userID uuid.UUID, name string) (*tag, error) {
+func (s *service) Get(ctx context.Context, userID uuid.UUID, name string) (*Tag, error) {
 	// 检测标签名称是否有效
 	for _, r := range name {
 		if !unicode.IsGraphic(r) {
@@ -67,7 +67,7 @@ type ListFilter struct {
 	Limit int32
 }
 
-func (s *service) List(ctx context.Context, userID uuid.UUID, filter ListFilter) ([]tag, error) {
+func (s *service) List(ctx context.Context, userID uuid.UUID, filter ListFilter) ([]Tag, error) {
 	if filter.Limit > 100 {
 		// uhh im not sure. should it just be 100?
 		filter.Limit = 100

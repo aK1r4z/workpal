@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type tag struct {
+type Tag struct {
 	ID   uuid.UUID `json:"id" db:"id"`
 	Name string    `json:"name" db:"name"` // 标签名
 
@@ -15,10 +15,10 @@ type tag struct {
 	DeletedAt *time.Time `json:"deleted_at" db:"deleted_at"` // 删除时间，为空则未删除
 }
 
-func New(userID uuid.UUID, name string) *tag {
+func New(userID uuid.UUID, name string) *Tag {
 	now := time.Now()
 
-	return &tag{
+	return &Tag{
 		Name: name,
 
 		CreatedBy: userID,
