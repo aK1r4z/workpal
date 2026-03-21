@@ -12,6 +12,7 @@ import (
 	"github.com/aK1r4z/workpal/internal/auth"
 	"github.com/aK1r4z/workpal/internal/store/postgres"
 	"github.com/aK1r4z/workpal/internal/store/redis"
+	"github.com/aK1r4z/workpal/internal/tag"
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
@@ -22,10 +23,7 @@ func main() {
 	ctx := context.TODO()
 
 	// 获取环境变量
-	err := godotenv.Load()
-	if err != nil {
-		panic(err)
-	}
+	godotenv.Load()
 
 	// 创建 Postgres 数据库连接
 	connString := os.Getenv("CONNECTION_STRING")
@@ -64,6 +62,12 @@ func main() {
 	api := e.Group("/api")
 	api.Use(authMiddleware)
 
+	// 创建标签服务
+	tagService := tag.NewService(db.TagStore())
+
+	tagHandler := tag.NewHandler(tagService)
+	tagHandler.RegisterRoutes(api)
+
 	// 创建 HTTP 服务器
 	s := &http.Server{
 		Addr:    ":8080",
@@ -94,6 +98,7 @@ func main() {
 	if err := s.Shutdown(ctx); err != nil {
 		e.Logger.Error("failed to shutdown server", "error", err)
 	}
+	db.Close()
 
 	log.Println("server closed.")
 }
