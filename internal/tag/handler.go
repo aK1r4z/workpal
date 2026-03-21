@@ -65,8 +65,8 @@ func (h *handler) list(c *echo.Context) error {
 	}
 
 	// 修正参数
-	if req.Page < 0 {
-		req.Page = 0
+	if req.Page < 1 {
+		req.Page = 1
 	}
 
 	if req.Limit < 0 {
