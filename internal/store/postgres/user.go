@@ -131,6 +131,7 @@ func (s *userStore) GetByName(ctx context.Context, username string) (*user.User,
 			deleted_at
 		from users u
 		where u.name = $1
+		and deleted_at is null
 		;
 	`
 
@@ -158,8 +159,8 @@ func (s *userStore) Delete(ctx context.Context, id uuid.UUID) error {
 	const query = `
 		update users
 		set deleted_at = $2
-		where
-			id = $1 and deleted_at = NULL
+		where id = $1
+		and deleted_at is NULL
 		;
 	`
 
