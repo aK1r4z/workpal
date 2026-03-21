@@ -78,20 +78,23 @@ func (s *tagStore) List(ctx context.Context, userID uuid.UUID, limit int32, offs
 
 	rows, err := s.conn.Query(ctx, query, userID, limit, offset)
 	if err != nil {
-		return []tag.Tag{}, err
+		return nil, err
 	}
 
 	tags := []tag.Tag{}
 	for rows.Next() {
 		if err := rows.Err(); err != nil {
-			return []tag.Tag{}, err
+			return nil, err
 		}
 
 		t := tag.Tag{}
-		rows.Scan(
+		err := rows.Scan(
 			&t.ID, &t.Name,
 			&t.CreatedBy, &t.CreatedAt, &t.DeletedAt,
 		)
+		if err != nil {
+			return nil, err
+		}
 
 		tags = append(tags, t)
 	}
