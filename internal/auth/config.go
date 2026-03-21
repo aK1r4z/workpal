@@ -36,7 +36,7 @@ func (c *config) Load() {
 			c.Iterations = uint32(val)
 		}
 	}
-	if p := os.Getenv("AUTH_ARGON2_MEMORY"); p != "" {
+	if p := os.Getenv("AUTH_ARGON2_PARALLELISM"); p != "" {
 		if val, err := strconv.ParseUint(p, 10, 8); err == nil {
 			c.Parallelism = uint8(val)
 		}
