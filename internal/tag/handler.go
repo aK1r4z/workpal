@@ -11,10 +11,10 @@ import (
 )
 
 type handler struct {
-	tagService service
+	tagService *service
 }
 
-func NewHandler(tagService service) *handler {
+func NewHandler(tagService *service) *handler {
 	return &handler{
 		tagService: tagService,
 	}
