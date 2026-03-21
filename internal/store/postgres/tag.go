@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/aK1r4z/workpal/internal/tag"
 	"github.com/google/uuid"
@@ -28,7 +29,7 @@ func (s *tagStore) Create(ctx context.Context, tag *tag.Tag) error {
 		;
 	`
 
-	err := s.conn.QueryRow(ctx, query, tag.Name, tag.CreatedBy, tag.CreatedAt, tag.DeletedAt).Scan(tag.ID)
+	err := s.conn.QueryRow(ctx, query, tag.Name, tag.CreatedBy, tag.CreatedAt, tag.DeletedAt).Scan(&tag.ID)
 	if err != nil {
 		return err
 	}
@@ -42,9 +43,9 @@ func (s *tagStore) Get(ctx context.Context, userID uuid.UUID, name string) (*tag
 			id, name,
 			created_by, created_at, deleted_at
 		from tags
-		where deleted = null
+		where deleted_at is null
 		and created_by = $1
-		and name = $1
+		and name = $2
 		;
 	`
 
@@ -69,7 +70,7 @@ func (s *tagStore) List(ctx context.Context, userID uuid.UUID, limit int32, offs
 			id, name,
 			created_by, created_at, deleted_at
 		from tags
-		where deleted_at = null
+		where deleted_at is null
 		and created_by = $1
 		order by created_at
 		limit $2 offset $3
@@ -100,14 +101,15 @@ func (s *tagStore) List(ctx context.Context, userID uuid.UUID, limit int32, offs
 
 func (s *tagStore) Delete(ctx context.Context, userID uuid.UUID, name string) error {
 	const query = `
-		delete from tags
-		where deleted_at = null
+		update tags
+		set deleted_at = $3
+		where deleted_at is null
 		and created_by = $1
 		and name = $2
 		;
 	`
 
-	_, err := s.conn.Exec(ctx, query, userID, name)
+	_, err := s.conn.Exec(ctx, query, userID, name, time.Now())
 	if err != nil {
 		return err
 	}
