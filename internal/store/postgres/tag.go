@@ -99,6 +99,9 @@ func (s *tagStore) List(ctx context.Context, userID uuid.UUID, limit int32, offs
 
 		tags = append(tags, t)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 
 	return tags, nil
 }
