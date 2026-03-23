@@ -80,6 +80,7 @@ func (s *tagStore) List(ctx context.Context, userID uuid.UUID, limit int32, offs
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	tags := []tag.Tag{}
 	for rows.Next() {
