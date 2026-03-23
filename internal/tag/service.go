@@ -26,6 +26,11 @@ func NewService(
 
 func (s *service) Create(ctx context.Context, userID uuid.UUID, name string) error {
 	// 检测标签名称是否有效
+	l := len(name)
+	if l < 2 || l > 8 {
+		return ErrInvalidName
+	}
+
 	for _, r := range name {
 		if !unicode.IsGraphic(r) {
 			return ErrInvalidName
@@ -70,7 +75,10 @@ func (s *service) List(ctx context.Context, userID uuid.UUID, filter ListFilter)
 
 	offset := (filter.Page - 1) * filter.Limit
 
-	return s.tags.List(ctx, userID, offset, filter.Limit)
+	// This should never happen, but uhh you know what i mean.
+	offset = max(offset, 0)
+
+	return s.tags.List(ctx, userID, filter.Limit, offset)
 }
 
 // [FIXME] isn't it too simple? i need to recheck this in the day.
