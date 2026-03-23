@@ -114,7 +114,7 @@ func (h *handler) get(c *echo.Context) error {
 	t, err := h.tagService.Get(c.Request().Context(), userID, req.Name)
 	if err != nil {
 		if errors.Is(err, ErrNotFound) {
-			return response.Success(c, http.StatusOK, 0, "not found", response.Nil{})
+			return response.Fail(c, http.StatusNotFound, -1, "not found")
 		}
 		return response.ErrInternalServerError(c, err)
 	}
