@@ -2,11 +2,15 @@ package tag
 
 import "time"
 
-type getResponse struct {
+type tagResponse struct {
 	Name      string    `json:"name"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
+type getResponse struct {
+	tagResponse
+}
+
 type listResponse struct {
-	Tags []string `json:"tags"`
+	Tags []tagResponse `json:"tags"`
 }

@@ -48,7 +48,7 @@ func (h *handler) create(c *echo.Context) error {
 		return response.Fail(c, http.StatusInternalServerError, -1, err.Error())
 	}
 
-	return nil
+	return response.Success(c, http.StatusCreated, 0, "created", response.Nil{})
 }
 
 // 获取标签列表请求处理器
@@ -85,11 +85,14 @@ func (h *handler) list(c *echo.Context) error {
 	}
 
 	resp := listResponse{
-		Tags: make([]string, len(tags)),
+		Tags: make([]tagResponse, len(tags)),
 	}
 
 	for i, t := range tags {
-		resp.Tags[i] = t.Name
+		resp.Tags[i] = tagResponse{
+			Name:      t.Name,
+			CreatedAt: t.CreatedAt,
+		}
 	}
 
 	return response.Success(c, http.StatusOK, 0, "success", resp)
@@ -117,8 +120,10 @@ func (h *handler) get(c *echo.Context) error {
 	}
 
 	return response.Success(c, http.StatusOK, 0, "found", getResponse{
-		Name:      t.Name,
-		CreatedAt: t.CreatedAt,
+		tagResponse: tagResponse{
+			Name:      t.Name,
+			CreatedAt: t.CreatedAt,
+		},
 	})
 }
 
