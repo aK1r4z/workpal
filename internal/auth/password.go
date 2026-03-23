@@ -48,6 +48,7 @@ func GenerateAuth(config *config, password string) (string, error) {
 }
 
 // 校验用户输入的密码与存储的认证串是否匹配
+// [FIXME] 也许可以换成正则表达式
 func VerifyPassword(password string, auth string) error {
 	// 解析存储的认证串
 	parts := strings.Split(auth, "$")

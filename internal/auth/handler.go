@@ -28,6 +28,7 @@ func (h *handler) RegisterRoutes(e *echo.Echo) {
 }
 
 // 注册请求处理器
+// [TODO] RateLimiter
 func (h *handler) register(c *echo.Context) error {
 	req := &registerRequest{}
 	if err := c.Bind(req); err != nil {
